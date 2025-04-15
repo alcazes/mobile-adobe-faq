@@ -53,3 +53,81 @@ implementation 'com.adobe.marketing.mobile:signal'
 implementation 'com.adobe.marketing.mobile:userprofile'
 implementation 'com.adobe.marketing.mobile:edgebridge' //required for analytics migration
 ```
+
+Notice that you should lock to a specific bom version for security reasons most likely, yo ucan check what is latest of the bom and what is in the bom using:
+https://central.sonatype.com/artifact/com.adobe.marketing.mobile/sdk-bom
+
+Notice that we added `implementation 'com.adobe.marketing.mobile:edgebridge'` which is not listed in the adobe launch extentions but is needed in our case as we will migrate legacy adobe analytics integration to AEP. This extension sole purpose if to transform the payload from MobileCore.tracState and MobileCore.trackAction to AEP XDM payload type. This approach also allows us to not do any changes to Adobe Analytics processing rules.
+
+### Update Android manifest with some access and details for deep link
+
+We need to add the following permssions:
+`<uses-permission android:name="android.permission.INTERNET" />`
+`<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />`
+
+For deeplinking for assurance puporses we added
+```
+<intent-filter>
+  <action android:name="android.intent.action.VIEW" />
+  <category android:name="android.intent.category.DEFAULT" />
+  <category android:name="android.intent.category.LAUNCHER" />
+  <category android:name="android.intent.category.BROWSABLE" />
+  <data
+    android:host="test.my.app"
+    android:scheme="http" />
+  </intent-filter>
+```
+We will specify `http://test.my.app` in the adobe assurance session interface when we want to debug
+
+```
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:name="AdobeSDKTest"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AdobeSDKTest"
+        tools:targetApi="31">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="test.my.app"
+                    android:scheme="http" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+    </application>
+
+</manifest>
+```
+
+
+
+
